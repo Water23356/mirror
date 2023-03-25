@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿#define debug
+using System.Collections.Generic;
 using UnityEngine;
 using Tools;
 using Mod_Attribute;
+using Unity.Burst.Intrinsics;
 
 namespace Mod_Entity
 {
@@ -13,7 +15,7 @@ namespace Mod_Entity
         /// <summary>
         /// 所属对象
         /// </summary>
-        public object owner;
+        public Entity owner;
         /// <summary>
         /// 计时器
         /// </summary>
@@ -32,26 +34,27 @@ namespace Mod_Entity
         /// <summary>
         /// 所挂载物体身上的碰撞器
         /// </summary>
-        public Collider2D Collider;
+        private Collider2D Collider;
         #endregion
 
         #region 属性
         private object owner;
-        private Dictionary<object, Timer> timers = new Dictionary<object, Timer>();//计时器
-        private List<string> damageTag;//伤害标签
+        private Dictionary<Entity, Timer> timers = new Dictionary<Entity, Timer>();//计时器
+        private List<string> damageTag = new List<string>();//伤害标签
+        private List<Entity> inDamageItems = new List<Entity>();//处于伤害范围内的实体对象
 
-        private float damage;//伤害值
-        private int damageTimes = 1;//对同一对象的最大允许伤害次数
-        private float cd = 0.05f;//多段伤害触发间隔
-        private float power = 0;//击退力量
+        public float damage;//伤害值
+        public int damageTimes = 1;//对同一对象的最大允许伤害次数
+        public float cd = 0.05f;//多段伤害触发间隔
+        public float power = 0;//击退力量
 
-        private bool effective = true;//伤害判定是否有效
-        private bool autoDead = false;//自动死亡
-        private bool hitsLimit = false;//是否限定造成伤害的总次数
-        private int hits = 0;//当前伤害判定生效次数
-        private int maxHits = 1;//最大伤害生效次数
-        private float maxLiveTime = 1;//存活时间
-        
+        public bool effective = true;//伤害判定是否有效
+        public bool autoDead = false;//自动死亡
+        public bool hitsLimit = false;//是否限定造成伤害的总次数
+        public int hits = 0;//当前伤害判定生效次数
+        public int maxHits = 1;//最大伤害生效次数
+        public float maxLiveTime = 1;//存活时间
+
         #endregion
 
         #region 公开属性
@@ -60,7 +63,7 @@ namespace Mod_Entity
         /// </summary>
         public object Owner
         {
-            get=>owner; set => owner = value;
+            get => owner; set => owner = value;
         }
         /// <summary>
         /// 伤害值
@@ -88,7 +91,7 @@ namespace Mod_Entity
         /// </summary>
         public float Power
         {
-            get => power;set => power = value;
+            get => power; set => power = value;
         }
         /// <summary>
         /// 伤害体存活时间
@@ -108,7 +111,7 @@ namespace Mod_Entity
         /// 是否在寿命尽头自动销毁此物体
         /// </summary>
         public bool AutoDead
-        { 
+        {
             get => autoDead; set => autoDead = value;
         }
         /// <summary>
@@ -116,7 +119,7 @@ namespace Mod_Entity
         /// </summary>
         public bool HitsLimit
         {
-            get => hitsLimit;set => hitsLimit = value;
+            get => hitsLimit; set => hitsLimit = value;
         }
         /// <summary>
         /// 最大伤害次数
@@ -125,7 +128,7 @@ namespace Mod_Entity
         /// <summary>
         /// 最大存活时间
         /// </summary>
-        public float MaxLiveTime { get => maxLiveTime;set=> maxLiveTime = value; }
+        public float MaxLiveTime { get => maxLiveTime; set => maxLiveTime = value; }
         #endregion
 
         #region 公开函数
@@ -159,36 +162,37 @@ namespace Mod_Entity
         /// 对目标对象做伤害判定
         /// </summary>
         /// <param name="aim">目标对象</param>
-        private void DamageJudge(object aim)
+        private void DamageJudge(Entity aim)
         {
-            Entity entity = aim as Entity;
-            if(entity != null)
+            //Debug.Log("进行伤害判断");
+            if (Tool.isInside(aim.DamageTag, damageTag))
             {
-                if(Tool.isInside(entity.DamageTag,damageTag))//判定是否在判定标签内
+                if (isInside(aim))//判断是否已拥有计时器
                 {
-                    if(isInside(entity))//判断是否已拥有计时器
+                    //Debug.Log("已拥有计时器");
+
+                    if (Damagable(aim))//判断伤害cd是否冷却
                     {
-                        if(Damagable(entity))//判断伤害cd是否冷却
-                        {
-                            ATHealth health = entity.GetAttribute<ATHealth>();
-                            health.ChangeHealth(damage, Owner);
-                            RestartCD(health);//重置计时器
-                        }
-                    }
-                    else
-                    {
-                        ATHealth health = entity.GetAttribute<ATHealth>();
+                        Debug.Log("造成伤害");
+                        ATHealth health = aim.GetAttribute<ATHealth>();
                         health.ChangeHealth(damage, Owner);
-                        AddCdLabel(health);//添加计时器
+                        RestartCD(aim);//重置计时器
                     }
-                    timers[entity].times++;
-                    hits++;
-                    if(hitsLimit)//对总伤害次数有限制
+                }
+                else
+                {
+                    //Debug.Log("没有计时器");
+                    ATHealth health = aim.GetAttribute<ATHealth>();
+                    health.ChangeHealth(damage, Owner);
+                    AddCdLabel(aim);//添加计时器
+                }
+                timers[aim].times++;
+                hits++;
+                if (hitsLimit)//对总伤害次数有限制
+                {
+                    if (hits >= maxHits)
                     {
-                        if(hits >= maxHits)
-                        {
-                            Destroy(gameObject);
-                        }
+                        Destroy(gameObject);
                     }
                 }
             }
@@ -197,7 +201,7 @@ namespace Mod_Entity
         /// 给指定对象 创建计时器
         /// </summary>
         /// <param name="aim">需要创建计时器的对象</param>
-        private void AddCdLabel(object aim)
+        private void AddCdLabel(Entity aim)
         {
             timers.Add(aim, new Timer()
             {
@@ -210,11 +214,11 @@ namespace Mod_Entity
         /// </summary>
         /// <param name="aim">需要判定的对象</param>
         /// <returns></returns>
-        private bool isInside(object aim)
+        private bool isInside(Entity aim)
         {
-            foreach(object obj in timers.Keys)
+            foreach (Entity obj in timers.Keys)
             {
-                if(obj == aim) { return true; }
+                if (obj == aim) { return true; }
             }
             return false;
         }
@@ -223,54 +227,77 @@ namespace Mod_Entity
         /// </summary>
         /// <param name="aim">需要判定的对象</param>
         /// <returns></returns>
-        private bool Damagable(object aim)
+        private bool Damagable(Entity aim)
         {
-            if (timers[aim].timer <= 0 && timers[aim].times<damageTimes) { return true; }
+            Debug.Log($"CDTime:{timers[aim].timer}");
+
+            if (timers[aim].timer <= 0 && timers[aim].times < damageTimes) { return true; }
             return false;
         }
         /// <summary>
         /// 使指定判定对象 的计时器重置
         /// </summary>
         /// <param name="aim"></param>
-        private void RestartCD(object aim)
+        private void RestartCD(Entity aim)
         {
             timers[aim].timer = cd;
         }
         #endregion
 
-        #region 碰撞检测
+        #region 
+        //进入触发器
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (!effective) return;
-
+            Entity entity = collision.GetComponent<Entity>();
+            if (entity != null)//如果是实体对象，则加入判定列表
+            {
+                if(Tool.isInside(entity.DamageTag, damageTag))
+                {
+                    inDamageItems.Add(entity);
+                    DamageJudge(entity);
+                }
+            }
+#if debug
+            Debug.Log("进入");
+#endif
         }
         private void OnTriggerExit2D(Collider2D collision)
         {
             if (!effective) return;
+            Entity entity = collision.GetComponent<Entity>();
+            if (entity != null)//如果是实体对象，则移除判定列表
+            {
+                inDamageItems.Remove(entity);
+            }
+#if debug
+            Debug.Log("离开");
+#endif
         }
-        private void OnTriggerStay2D(Collider2D collision)
+        private void OnTriggerStay2D(Collider2D collision)//弃用此方案，因为长时间在范围内不移动则不会触发此事件
         {
-            if (!effective) return;
-            DamageJudge(collision.GetComponent<Entity>());
         }
+
         #endregion
 
         #region Unity
         private void Start()
         {
-            
+            Collider = GetComponent<Collider2D>();
+            damageTag.Add("Test");
         }
         private void Update()
         {
             if (!effective) return;
-            for(int i=0;i<timers.Count;i++)
+            foreach (Entity entity in inDamageItems)
             {
-                timers[i].timer -= Time.deltaTime;
+                if (timers[entity].timer > 0) { timers[entity].timer -= Time.deltaTime; }
+                DamageJudge(entity);
             }
 
-            if(autoDead)
+            if (autoDead)
             {
-                maxLiveTime -= Time.deltaTime;
+                if (maxLiveTime > 0) { maxLiveTime -= Time.deltaTime; }
                 if (maxLiveTime <= 0)
                 {
                     Destroy(gameObject);

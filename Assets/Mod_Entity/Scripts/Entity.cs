@@ -11,7 +11,7 @@ namespace Mod_Entity
     public class Entity : MonoBehaviour
     {
         #region 属性
-        private string damageTag;
+        private string damageTag = "Test";
         private List<IAttribute> attributes= new List<IAttribute>();
         /// <summary>
         /// 伤害标签

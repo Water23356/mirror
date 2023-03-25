@@ -49,10 +49,11 @@ namespace Mod_Attribute
     {
         #region 属性
         private string attributeName = "Health";
-        private HealthValue healthValue;
+        public float health = 100;
+        public float healthMax = 100;
         private Entity owner;
-        private bool negative = false;
-        private bool overflow = false;
+        public bool negative = false;
+        public bool overflow = false;
         #endregion
 
         #region 公开属性
@@ -102,29 +103,29 @@ namespace Mod_Attribute
         public bool SetHealth(float value, object pruner)
         {
             bool next = true;
-            float change = value - healthValue.health;
+            float change = value - health;
             if (HealthChangeBefAction != null)
             {
                 next = HealthChangeBefAction(new HealthEventInfo
                 {
-                    health = healthValue.health,
-                    healthMax = healthValue.healthMax,
+                    health = health,
+                    healthMax = healthMax,
                     healthChange = change,
                     pruner= pruner
                 }) ;
             }
             if(next)
             {
-                healthValue.health = value;
+                health = value;
 
                 #region 界线判定
                 if (!negative)
                 {
-                    if (healthValue.health < 0) { healthValue.health = 0; }
+                    if (health < 0) { health = 0; }
                 }
                 if(!overflow)
                 {
-                    if (healthValue.health > healthValue.healthMax) { healthValue.health = healthValue.healthMax; }
+                    if (health > healthMax) { health = healthMax; }
                 }
                 #endregion
 
@@ -132,8 +133,8 @@ namespace Mod_Attribute
                 {
                     HealthChangeAction(new HealthEventInfo
                     {
-                        health = healthValue.health,
-                        healthMax = healthValue.healthMax,
+                        health = health,
+                        healthMax = healthMax,
                         healthChange = change,
                         pruner = pruner
                     });
@@ -150,29 +151,29 @@ namespace Mod_Attribute
         public bool SetHealthMax(float value, object pruner)
         {
             bool next = true;
-            float change = value - healthValue.healthMax;
+            float change = value - healthMax;
             if (HealthMaxChangeBefAction != null)
             {
                 next = HealthMaxChangeBefAction(new HealthEventInfo
                 {
-                    health = healthValue.health,
-                    healthMax = healthValue.healthMax,
+                    health = health,
+                    healthMax = healthMax,
                     healthMaxChange = change,
                     pruner = pruner
                 });
             }
             if (next)
             {
-                healthValue.healthMax = value;
+                healthMax = value;
 
                 #region 界线判定
                 if (!negative)
                 {
-                    if (healthValue.health < 0) { healthValue.health = 0; }
+                    if (health < 0) { health = 0; }
                 }
                 if (!overflow)
                 {
-                    if (healthValue.health > healthValue.healthMax) { healthValue.health = healthValue.healthMax; }
+                    if (health > healthMax) { health = healthMax; }
                 }
                 #endregion
 
@@ -180,8 +181,8 @@ namespace Mod_Attribute
                 {
                     HealthMaxChangeAction(new HealthEventInfo
                     {
-                        health = healthValue.health,
-                        healthMax = healthValue.healthMax,
+                        health = health,
+                        healthMax = healthMax,
                         healthMaxChange = change,
                         pruner = pruner
                     });
@@ -198,28 +199,29 @@ namespace Mod_Attribute
         public bool ChangeHealth(float value, object pruner)
         {
             bool next = true;
+            Debug.Log("生命发生改变！");
             if (HealthChangeBefAction != null)
             {
                 next = HealthChangeBefAction(new HealthEventInfo
                 {
-                    health = healthValue.health,
-                    healthMax = healthValue.healthMax,
+                    health = health,
+                    healthMax = healthMax,
                     healthChange = value,
                     pruner = pruner
                 });
             }
             if (next)
             {
-                healthValue.health += value;
+                health += value;
 
                 #region 界线判定
                 if (!negative)
                 {
-                    if (healthValue.health < 0) { healthValue.health = 0; }
+                    if (health < 0) { health = 0; }
                 }
                 if (!overflow)
                 {
-                    if (healthValue.health > healthValue.healthMax) { healthValue.health = healthValue.healthMax; }
+                    if (health > healthMax) { health = healthMax; }
                 }
                 #endregion
 
@@ -227,8 +229,8 @@ namespace Mod_Attribute
                 {
                     HealthChangeAction(new HealthEventInfo
                     {
-                        health = healthValue.health,
-                        healthMax = healthValue.healthMax,
+                        health = health,
+                        healthMax = healthMax,
                         healthChange = value,
                         pruner = pruner
                     });
@@ -249,24 +251,24 @@ namespace Mod_Attribute
             {
                 next = HealthMaxChangeBefAction(new HealthEventInfo
                 {
-                    health = healthValue.health,
-                    healthMax = healthValue.healthMax,
+                    health = health,
+                    healthMax = healthMax,
                     healthMaxChange = value,
                     pruner = pruner
                 });
             }
             if (next)
             {
-                healthValue.healthMax += value;
+                healthMax += value;
 
                 #region 界线判定
                 if (!negative)
                 {
-                    if (healthValue.health < 0) { healthValue.health = 0; }
+                    if (health < 0) { health = 0; }
                 }
                 if (!overflow)
                 {
-                    if (healthValue.health > healthValue.healthMax) { healthValue.health = healthValue.healthMax; }
+                    if (health > healthMax) { health = healthMax; }
                 }
                 #endregion
 
@@ -274,8 +276,8 @@ namespace Mod_Attribute
                 {
                     HealthMaxChangeAction(new HealthEventInfo
                     {
-                        health = healthValue.health,
-                        healthMax = healthValue.healthMax,
+                        health = health,
+                        healthMax = healthMax,
                         healthMaxChange = value,
                         pruner = pruner
                     });
@@ -285,7 +287,7 @@ namespace Mod_Attribute
         }
         public object GetStatus()
         {
-            return healthValue;
+            return new HealthValue { health = health,healthMax=healthMax};
         }
         #endregion
 
