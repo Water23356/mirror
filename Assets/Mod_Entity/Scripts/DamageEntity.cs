@@ -97,7 +97,6 @@ namespace Mod_Entity
         {
             get => maxLiveTime; set => maxLiveTime = value;
         }
-
         /// <summary>
         /// 判定是否启用
         /// </summary>
