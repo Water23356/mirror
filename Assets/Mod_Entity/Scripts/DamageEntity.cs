@@ -7,29 +7,31 @@ using Unity.Burst.Intrinsics;
 
 namespace Mod_Entity
 {
-    /// <summary>
-    /// 对象计时器
-    /// </summary>
-    public class Timer
-    {
-        /// <summary>
-        /// 所属对象
-        /// </summary>
-        public Entity owner;
-        /// <summary>
-        /// 计时器
-        /// </summary>
-        public float timer;
-        /// <summary>
-        /// 附加计数器
-        /// </summary>
-        public int times;
-    }
+   
     /// <summary>
     /// 伤害体脚本
     /// </summary>
     public class DamageEntity : MonoBehaviour
     {
+        /// <summary>
+        /// 对象计时器
+        /// </summary>
+        private class Timer
+        {
+            /// <summary>
+            /// 所属对象
+            /// </summary>
+            public Entity owner;
+            /// <summary>
+            /// 计时器
+            /// </summary>
+            public float timer;
+            /// <summary>
+            /// 附加计数器
+            /// </summary>
+            public int times;
+        }
+
         #region 关联组件
         /// <summary>
         /// 所挂载物体身上的碰撞器
@@ -92,13 +94,6 @@ namespace Mod_Entity
         public float Power
         {
             get => power; set => power = value;
-        }
-        /// <summary>
-        /// 伤害体存活时间
-        /// </summary>
-        public float LiveTime
-        {
-            get => maxLiveTime; set => maxLiveTime = value;
         }
         /// <summary>
         /// 判定是否启用
@@ -165,7 +160,7 @@ namespace Mod_Entity
         private void DamageJudge(Entity aim)
         {
             //Debug.Log("进行伤害判断");
-            if (Tool.isInside(aim.DamageTag, damageTag))
+            if (damageTag.Contains(aim.DamageTag))
             {
                 if (isInside(aim))//判断是否已拥有计时器
                 {
@@ -252,7 +247,7 @@ namespace Mod_Entity
             Entity entity = collision.GetComponent<Entity>();
             if (entity != null)//如果是实体对象，则加入判定列表
             {
-                if(Tool.isInside(entity.DamageTag, damageTag))
+                if(damageTag.Contains(entity.DamageTag))
                 {
                     inDamageItems.Add(entity);
                     DamageJudge(entity);
