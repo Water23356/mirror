@@ -14,6 +14,7 @@ namespace Common
     public abstract class ControlPanel:MonoBehaviour
     {
         #region 属性
+        public string panelName = "控制器";
         /// <summary>
         /// 是否拥有控制权
         /// </summary>
@@ -48,13 +49,6 @@ namespace Common
         /// </summary>
         public abstract void initialization();
         #endregion
-        public void Start()
-        {
-            if(ControllerAlloter.instance!=null)
-            {
-
-            }
-        }
         public void Update()
         {
             if(contorl)

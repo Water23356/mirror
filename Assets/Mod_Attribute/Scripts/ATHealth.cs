@@ -289,6 +289,10 @@ namespace Mod_Attribute
         {
             return new HealthValue { health = health,healthMax=healthMax};
         }
+        public void Destroy()
+        {
+            Destroy(this);
+        }
         #endregion
 
         #region 内部函数

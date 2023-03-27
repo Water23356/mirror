@@ -46,6 +46,10 @@ namespace Mod_StateMachine
         {
             throw new NotImplementedException();
         }
+        public void Destroy()
+        {
+            Destroy(this);
+        }
         #endregion
 
         #region Unity

@@ -54,6 +54,7 @@ namespace Common
         /// <returns>获取是否成功</returns>
         public bool GetPower(ControlPanel obj)
         {
+            Debug.Log($"有面板尝试获取权限：{obj.panelName}");
             ControlPanel last = null;
             if(controlStacks[0].TryPeek(out last))
             {
@@ -109,7 +110,7 @@ namespace Common
 
 
         #region Unity
-        private void Start()
+        private void Awake()
         {
             instance = this;
             controlStacks[0] = new Stack<ControlPanel>();

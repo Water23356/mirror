@@ -28,6 +28,7 @@ namespace Mod_Entity
         /// </summary>
         public void AddAttribute(IAttribute attribute)
         {
+            if (attribute == null) return;
             attributes.Add(attribute);
             attribute.Owner = this;
         }
@@ -71,6 +72,18 @@ namespace Mod_Entity
             }
             return null;
         }    
+        /// <summary>
+        /// 从这个实体中移除指定属性（同时销毁组件）
+        /// </summary>
+        /// <param name="attribute"></param>
+        public void RemoveAttribute(IAttribute attribute)
+        {
+            if(attributes.Contains(attribute))
+            {
+                attributes.Remove(attribute);
+                attribute.Destroy();
+            }
+        }
         #endregion
 
         void Start()

@@ -1,89 +1,39 @@
-﻿using System.Collections.Generic;
+﻿using Mod_Entity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
-using Tools;
-using Mod_Attribute;
-using Mod_Entity;
 
 namespace Mod_Behaviour
 {
-    public enum State { Waiting, Running }
-    public enum Dir {left,right,up,down }
-
-    /// <summary>
-    /// 移动行为
-    /// </summary>
-    public class BHMove : MonoBehaviour, IBehaviour
+    public class BHMove : BehaviourNormal
     {
         #region 属性
         private string attributeName;
         private Entity owner;
-        private State state = State.Waiting;//状态机状态
-        private Animator animator;//动画机
-        private Dir direction;//运动方向
-        private float speed;//移动速度
         #endregion
 
         #region 公开属性
-        public string Name { get => attributeName; set => attributeName = value; }
-        public Entity Owner { get; set; }
-        /// <summary>
-        /// 运动方向
-        /// </summary>
-        public Dir Direction { get; set; }
-        /// <summary>
-        /// 移动速度
-        /// </summary>
-        public float Speed { get; set; }
+        public override string Name { get => attributeName; set => attributeName = value; }
+        public override Entity Owner { get => owner; set => owner=value; }
         #endregion
 
-        #region 功能属性
-        public object GetStatus()
+        #region 功能函数
+        public override object GetStatus()
         {
-            return state;
+            return null;
         }
-        public bool StartBehaviour()
-        {
-            state = State.Running;
-            return true;
-        }
-        public bool StopBehaviour()
-        {
-            state = State.Waiting;
-            return true;
-        }
-        #endregion
 
-        #region 内部函数
-        private void Running()
+        public override bool StartBehaviour()
         {
-            switch(direction)
-            {
-                case Dir.left:
-                    owner.transform.position -= new Vector3(speed,0,0);
-                    break;
-                case Dir.right:
-                    owner.transform.position += new Vector3(speed,0,0);
-                    break;
-            }
+            return false;
         }
-        #endregion
 
-        #region Unity
-        private void Start()
+        public override bool StopBehaviour()
         {
-
-        }
-        private void Update()
-        {
-            switch (state)
-            {
-                case State.Running:
-                    Running();
-                    break;
-                case State.Waiting:
-
-                    break;
-            }
+            return false;
         }
         #endregion
     }

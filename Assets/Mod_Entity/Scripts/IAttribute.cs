@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Mod_Entity
 {
@@ -24,5 +25,9 @@ namespace Mod_Entity
         /// </summary>
         /// <returns></returns>
         public object GetStatus();
+        /// <summary>
+        /// 当从实体移除此组件时调用
+        /// </summary>
+        public void Destroy();
     }
 }
