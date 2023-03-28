@@ -92,6 +92,8 @@ namespace Mod_Entity
             foreach(IAttribute attribute in attributes)
             {
                 AddAttribute(attribute);
+                attribute.Owner = this;
+                Debug.Log("测试："+attribute.Owner.damageTag);
             }
         }
         void Update()

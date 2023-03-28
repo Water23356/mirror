@@ -287,6 +287,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2961468b7f854bd42b81fbe67d6614d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  panelName: "\u63A7\u5236\u5668"
 --- !u!114 &361586222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -299,17 +300,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35562e8ee3c5569439e3d0249a3ea3dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attributeName: 
-  owner: {fileID: 0}
   animator: {fileID: 0}
-  attributeName: PlayerMoveBH
-  owner: {fileID: 0}
-  state: 0
-  direction: 0
   speed: 0
-  <Owner>k__BackingField: {fileID: 0}
-  <Direction>k__BackingField: 0
-  <Speed>k__BackingField: 0
+  maxSpeed: 10
 --- !u!114 &361586223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -322,10 +315,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82f39018feaca674a82bd9eade06df8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attributeName: 
-  owner: {fileID: 0}
-  attributeName: 
-  owner: {fileID: 0}
 --- !u!114 &361586224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -338,10 +327,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22cbbdb8130890943b4d79862cfcc3d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attributeName: 
-  owner: {fileID: 0}
-  attributeName: 
-  owner: {fileID: 0}
 --- !u!1 &555336956
 GameObject:
   m_ObjectHideFlags: 0
@@ -477,6 +462,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3830975550151754888, guid: 6434fb594b92fcd42aa2285ab9fcd39c, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3830975550151754893, guid: 6434fb594b92fcd42aa2285ab9fcd39c, type: 3}
       propertyPath: m_Name
       value: Player
@@ -523,7 +512,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 3
+  m_Constraints: 7
 --- !u!114 &899915673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1251,6 +1240,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 361586221}
+  psm: {fileID: 361586220}
 --- !u!1001 &3407234180749466475
 PrefabInstance:
   m_ObjectHideFlags: 0

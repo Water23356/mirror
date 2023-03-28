@@ -7,7 +7,7 @@ using Mod_Entity;
 namespace Mod_Player
 {
     public enum State { Waiting, Running }
-    public enum Dir {left,right,up,down }
+    public enum Dir { left, right, up, down }
 
     /// <summary>
     /// 移动行为
@@ -23,21 +23,26 @@ namespace Mod_Player
         private Entity owner;
         private State state = State.Waiting;//状态机状态
         private Dir direction;//运动方向
-        private float speed;//移动速度
+        public float speed;//移动速度
+        public float maxSpeed;//最大移动速度
         #endregion
 
         #region 公开属性
         public GameObject GameObject { get => gameObject; }
         public string Name { get => attributeName; set => attributeName = value; }
-        public Entity Owner { get; set; }
+        public Entity Owner { get => owner; set => owner = value; }
         /// <summary>
         /// 运动方向
         /// </summary>
-        public Dir Direction { get; set; }
+        public Dir Direction { get => direction; set => direction = value; }
         /// <summary>
         /// 移动速度
         /// </summary>
-        public float Speed { get; set; }
+        public float Speed { get => speed; set => speed = value; }
+        /// <summary>
+        /// 最大移动速度
+        /// </summary>
+        public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
         #endregion
 
         #region 功能函数
@@ -64,13 +69,14 @@ namespace Mod_Player
         #region 内部函数
         private void Running()
         {
-            switch(direction)
+            Debug.Log("移动！！！！");
+            switch (direction)
             {
                 case Dir.left:
-                    owner.transform.position -= new Vector3(speed,0,0);
+                    owner.transform.position -= new Vector3(speed, 0, 0) * Time.deltaTime;
                     break;
                 case Dir.right:
-                    owner.transform.position += new Vector3(speed,0,0);
+                    owner.transform.position += new Vector3(speed, 0, 0) * Time.deltaTime;
                     break;
             }
         }
@@ -81,7 +87,7 @@ namespace Mod_Player
         #region Unity
         private void Start()
         {
-            
+
         }
         private void Update()
         {

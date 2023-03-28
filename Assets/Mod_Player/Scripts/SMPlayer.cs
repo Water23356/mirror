@@ -6,7 +6,7 @@ namespace Mod_Player
     /// <summary>
     /// 玩家状态机，负责状态切换，协调动画机，状态内逻辑
     /// </summary>
-    public class PlayerStateMachine : MonoBehaviour, IStateMachine
+    public class SMPlayer : SMLand
     {
 
         #region 属性
@@ -16,39 +16,48 @@ namespace Mod_Player
         #endregion
 
         #region 公开属性
-        public virtual string Name { get => attributeName; set => attributeName = value; }
-        public virtual Entity Owner { get => player; set => player = value; }
+        public override string Name { get => attributeName; set => attributeName = value; }
+        public override Entity Owner { get => player; set => player = value; }
         #endregion
 
         #region 功能函数
-        public GameObject GameObject { get => gameObject; }
         /// <summary>
         /// 获取当前状态状态
         /// </summary>
         /// <returns>一个状态枚举</returns>
-        public virtual object GetStatus()
+        public override object GetStatus()
         {
             return status;
         }
-        public virtual bool StartMachine()
+        public override bool StartMachine()
         {
             status = State.normal;
             return true;
         }
-        public virtual bool StopMachine()
+        public override bool StopMachine()
         {
             status = State.stop;
             return false;
-        }
-        public void Destroy()
-        {
-            Destroy(this);
         }
         public void Input(PlayerInputInfo input) { inputInfo = input; }
         #endregion
 
 
+
         #region 状态机
+        public override void StopDrop()
+        {
+            switch(status)
+            {
+                case State.air:
+                    status = State.normal;
+                    break;
+                case State.moveAir:
+                    status = State.move;
+                    break;
+            }
+            
+        }
         /// <summary>
         /// 状态机状态
         /// </summary>
@@ -67,9 +76,13 @@ namespace Mod_Player
             /// </summary>
             move,
             /// <summary>
-            /// 跳跃
+            /// 跳跃(空中状态)
             /// </summary>
-            jump,
+            air,
+            /// <summary>
+            /// 空中移动
+            /// </summary>
+            moveAir,
             /// <summary>
             /// 攻击
             /// </summary>
@@ -101,6 +114,11 @@ namespace Mod_Player
         /// </summary>
         private void State_Normal()
         {
+            if(isAir)//滞空判定
+            {
+                status = State.air;
+                return;
+            }
             #region 移动操作判定
             if (inputInfo.Horizontal < 0)
             {
@@ -108,6 +126,7 @@ namespace Mod_Player
                 if (bHMove != null)
                 {
                     bHMove.Direction = Dir.left;
+                    bHMove.Speed = Mathf.Abs(bHMove.MaxSpeed*inputInfo.Horizontal);
                     bHMove.StartBehaviour();
                     status = State.move;
                 }
@@ -118,6 +137,7 @@ namespace Mod_Player
                 if (bHMove != null)
                 {
                     bHMove.Direction = Dir.right;
+                    bHMove.Speed = Mathf.Abs(bHMove.MaxSpeed * inputInfo.Horizontal);
                     bHMove.StartBehaviour();
                     status = State.move;
                 }
@@ -136,7 +156,8 @@ namespace Mod_Player
                 BHJumpPlayer bHJump = player.GetAttribute<BHJumpPlayer>();
                 if (bHJump != null)
                 {
-                    status = State.jump;
+                    bHJump.StartBehaviour();
+                    status = State.air;
                 }
             }
             else if (inputInfo.skill)//技能操作判定
@@ -153,14 +174,79 @@ namespace Mod_Player
         /// </summary>
         private void State_Move()
         {
-
+            if(inputInfo.Horizontal == 0)//停止移动
+            {
+                BHMovePlayer bHMove = player.GetAttribute<BHMovePlayer>();
+                bHMove.Speed = 0;
+                
+                bHMove.StopBehaviour();
+                Debug.Log("停止：" + bHMove.GetStatus());
+                status = State.normal;
+            }
+            else
+            {
+                BHMovePlayer bHMove = player.GetAttribute<BHMovePlayer>();
+                bHMove.Speed = Mathf.Abs(bHMove.MaxSpeed * inputInfo.Horizontal);
+            }
         }
         /// <summary>
         /// 跳跃状态
         /// </summary>
-        private void State_Jump()
+        private void State_Air()
         {
+            #region 移动操作判定
+            if (inputInfo.Horizontal < 0)
+            {
+                BHMovePlayer bHMove = player.GetAttribute<BHMovePlayer>();
+                if (bHMove != null)
+                {
+                    bHMove.Direction = Dir.left;
+                    bHMove.Speed = Mathf.Abs(bHMove.MaxSpeed * inputInfo.Horizontal);
+                    bHMove.StartBehaviour();
+                    status = State.move;
+                }
+            }
+            else if (inputInfo.Horizontal > 0)
+            {
+                BHMovePlayer bHMove = player.GetAttribute<BHMovePlayer>();
+                if (bHMove != null)
+                {
+                    bHMove.Direction = Dir.right;
+                    bHMove.Speed = Mathf.Abs(bHMove.MaxSpeed * inputInfo.Horizontal);
+                    bHMove.StartBehaviour();
+                    status = State.move;
+                }
+            }
+            #endregion
+            if (inputInfo.jump)//跳跃操作判定
+            {
+                BHJumpPlayer bHJump = player.GetAttribute<BHJumpPlayer>();
+                if (bHJump != null)
+                {
+                    bHJump.StartBehaviour();
+                    status = State.moveAir;
+                }
+            }
+        }
+        /// <summary>
+        /// 空中移动
+        /// </summary>
+        private void State_MoveAir()
+        {
+            if (inputInfo.Horizontal == 0)//停止移动
+            {
+                BHMovePlayer bHMove = player.GetAttribute<BHMovePlayer>();
+                bHMove.Speed = 0;
 
+                bHMove.StopBehaviour();
+                Debug.Log("停止：" + bHMove.GetStatus());
+                status = State.air;
+            }
+            else
+            {
+                BHMovePlayer bHMove = player.GetAttribute<BHMovePlayer>();
+                bHMove.Speed = Mathf.Abs(bHMove.MaxSpeed * inputInfo.Horizontal);
+            }
         }
         /// <summary>
         /// 攻击状态
@@ -214,14 +300,18 @@ namespace Mod_Player
                 case State.attack:
                     State_Attack();
                     break;
-                case State.jump:
-                    State_Jump();
+                case State.moveAir:
+                    State_MoveAir();
+                    break;
+                case State.air:
+                    State_Air();
                     break;
                 case State.dash:
                     State_Dash();
                     break;
             }
         }
+
         #endregion
     }
 }

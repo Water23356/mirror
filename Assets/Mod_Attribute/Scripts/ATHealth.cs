@@ -58,6 +58,14 @@ namespace Mod_Attribute
 
         #region 公开属性
         /// <summary>
+        /// 当前生命值
+        /// </summary>
+        public float Health { get => health; }
+        /// <summary>
+        /// 当前生命值上限
+        /// </summary>
+        public float HealthMax { get => healthMax; }
+        /// <summary>
         /// 生命值是否可小于零
         /// </summary>
         public bool Negative { get => negative; set => negative = value; }

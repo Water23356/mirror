@@ -49,14 +49,14 @@ namespace Mod_Player
         
 
         #region 抽象实现
-        public override void initialization()
+        public sealed override void initialization()
         {
             player = GetComponent<Entity>();
         }
         /// <summary>
         /// 玩家输入监听
         /// </summary>
-        public override void InputMonitor()
+        public sealed override void InputMonitor()
         {
             inputInfo.Horizontal = Input.GetAxis("Horizontal");//水平轴
             inputInfo.Vertical = Input.GetAxis("Vertical");//垂直轴
@@ -66,11 +66,10 @@ namespace Mod_Player
             inputInfo.skill = Input.GetButtonDown("Skill");//技能
             inputInfo.change = Input.GetButtonDown("Change");//切换
             Debug.Log("玩家输入正在监听");
-            //Debug.Log($"水平轴:{inputInfo.Horizontal}");
         }
-        public override void UpdateFunction()
+        public sealed override void UpdateFunction()
         {
-            player.GetAttribute<PlayerStateMachine>().Input(inputInfo);//输入信息同步到状态机
+            player.GetAttribute<SMPlayer>().Input(inputInfo);//输入信息同步到状态机
         }
         /// <summary>
         /// 获取输入状态

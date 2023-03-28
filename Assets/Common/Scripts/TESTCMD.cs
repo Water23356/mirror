@@ -6,7 +6,7 @@ namespace Common
     public class TESTCMD : MonoBehaviour
     {
         public PlayerController controller;
-        public PlayerStateMachine psm;
+        public SMPlayer psm;
 
         public void GetPower()
         {
