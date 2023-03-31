@@ -26,7 +26,7 @@ namespace Mod_Entity
         /// <summary>
         /// 添加新的属性对象
         /// </summary>
-        public void AddAttribute(IAttribute attribute)
+        public virtual void AddAttribute(IAttribute attribute)
         {
             if (attribute == null) return;
             attributes.Add(attribute);
@@ -37,7 +37,7 @@ namespace Mod_Entity
         /// </summary>
         /// <typeparam name="T">组件类型</typeparam>
         /// <returns></returns>
-        public T GetAttribute<T>() where T :class,IAttribute
+        public virtual T GetAttribute<T>() where T :class,IAttribute
         {
             foreach(IAttribute attribute in attributes)
             {
@@ -50,7 +50,7 @@ namespace Mod_Entity
         /// </summary>
         /// <typeparam name="T">组件类型</typeparam>
         /// <returns></returns>
-        public T[] GetAttributes<T>() where T : class, IAttribute
+        public virtual T[] GetAttributes<T>() where T : class, IAttribute
         {
             List<T> list = new List<T>();
             foreach (IAttribute attribute in attributes)
@@ -64,7 +64,7 @@ namespace Mod_Entity
         /// </summary>
         /// <param name="name">属性名称</param>
         /// <returns></returns>
-        public IAttribute GetAttribute(string name)
+        public virtual IAttribute GetAttribute(string name)
         {
             foreach(IAttribute attribute in attributes)
             {
@@ -76,7 +76,7 @@ namespace Mod_Entity
         /// 从这个实体中移除指定属性（同时销毁组件）
         /// </summary>
         /// <param name="attribute"></param>
-        public void RemoveAttribute(IAttribute attribute)
+        public virtual void RemoveAttribute(IAttribute attribute)
         {
             if(attributes.Contains(attribute))
             {
@@ -86,7 +86,7 @@ namespace Mod_Entity
         }
         #endregion
 
-        void Start()
+        public void Start()
         {
             IAttribute[] attributes = GetComponents<IAttribute>();
             foreach(IAttribute attribute in attributes)

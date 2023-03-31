@@ -22,6 +22,7 @@ namespace Mod_Player
         public bool dash;
         public bool skill;
         public bool change;
+        public float time;
     }
 
     public class PlayerController : ControlPanel,IAttribute
@@ -34,6 +35,10 @@ namespace Mod_Player
         #endregion
 
         #region 公开属性
+        /// <summary>
+        /// 指令解释器
+        /// </summary>
+        public InputInterpreter parser;
         public GameObject GameObject { get => gameObject; }
         /// <summary>
         /// 输入监听是否有效
@@ -65,11 +70,11 @@ namespace Mod_Player
             inputInfo.dash = Input.GetButtonDown("Dash");//冲刺
             inputInfo.skill = Input.GetButtonDown("Skill");//技能
             inputInfo.change = Input.GetButtonDown("Change");//切换
-            Debug.Log("玩家输入正在监听");
+            inputInfo.time = Time.time;//指令时间
         }
         public sealed override void UpdateFunction()
         {
-            player.GetAttribute<SMPlayer>().Input(inputInfo);//输入信息同步到状态机
+            parser.AddInput(inputInfo);//将输入信息添加至解释器
         }
         /// <summary>
         /// 获取输入状态

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Mod_Entity
 {
     /// <summary>
-    /// 带有落地判定的状态机
+    /// 带有虚拟预判定的状态机
     /// </summary>
     public abstract class SMLand : MonoBehaviour,IStateMachine
     {
@@ -17,11 +17,7 @@ namespace Mod_Entity
         /// <summary>
         /// 着地判定器
         /// </summary>
-        public JumpLand LandToucher;
-        /// <summary>
-        /// 是否处于空中
-        /// </summary>
-        public bool isAir = false;
+        public TouchLand LandToucher;
         #endregion
 
         #region 公开属性
@@ -31,9 +27,13 @@ namespace Mod_Entity
 
         #region 功能函数
         /// <summary>
-        /// 触地事件（在实体接触到地面时触发）
+        /// 接触地面时调用的事件
         /// </summary>
-        public abstract void StopDrop();
+        public abstract void TouchLand();
+        /// <summary>
+        /// 在离开地面时调用的事件
+        /// </summary>
+        public abstract void LeaveLand();
         public virtual void Destroy()
         {
             Destroy(this);
@@ -52,6 +52,19 @@ namespace Mod_Entity
         {
             return false;
         }
+        #endregion
+
+        #region Unity
+        public void Start()
+        {
+            if(LandToucher!=null)
+            {
+                Debug.Log("委托已添加");
+                LandToucher.AddTouchAction(TouchLand);
+                LandToucher.AddUntouchAction(LeaveLand);
+            }
+        }
+
         #endregion
     }
 }
