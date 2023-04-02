@@ -10,15 +10,18 @@ namespace Mod_Entity
     /// </summary>
     public class Entity : MonoBehaviour
     {
-        #region 属性
+        #region 字段
         private string damageTag = "Test";
         private List<IAttribute> attributes= new List<IAttribute>();
+        #endregion
+
+        #region 属性
         /// <summary>
         /// 伤害标签
         /// </summary>
         public string DamageTag
         {
-            get =>damageTag; set =>damageTag = value;
+            get => damageTag; set => damageTag = value;
         }
         #endregion
 
@@ -86,19 +89,20 @@ namespace Mod_Entity
         }
         #endregion
 
-        public void Start()
+        #region Unity
+        protected void Start()
         {
             IAttribute[] attributes = GetComponents<IAttribute>();
             foreach(IAttribute attribute in attributes)
             {
                 AddAttribute(attribute);
                 attribute.Owner = this;
-                Debug.Log("测试："+attribute.Owner.damageTag);
             }
         }
         void Update()
         {
 
         }
+        #endregion
     }
 }

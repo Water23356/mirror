@@ -9,136 +9,264 @@ using UnityEngine;
 namespace Mod_Entity
 {
     /// <summary>
-    /// 行为模块抽象基类（激活时自动激活行为，行为结束时自动取消激活）
+    /// 状态机状态
     /// </summary>
-    public abstract class BHBase : MonoBehaviour,IBehaviour
-    {
-        #region 属性
+    public enum State 
+    { 
         /// <summary>
-        /// 行为id
+        /// 未启动
         /// </summary>
-        public readonly static BHIDTable BHid;
+        wait,
         /// <summary>
-        /// 进入等级
+        /// 开始阶段（前段）
         /// </summary>
-        public readonly static int enterLevel;
+        start,
         /// <summary>
-        /// 持续等级
+        /// 运行阶段（中段）
         /// </summary>
-        public readonly static int runninglevel;
+        running,
         /// <summary>
-        /// 行为结束时调用
+        /// 结束阶段（后段）
         /// </summary>
-        protected Action EndAction;
-        /// <summary>
-        /// 行为开始时调用
-        /// </summary>
-        protected Action StartAction;
-        /// <summary>
-        /// 所属实体
-        /// </summary>
-        protected ExciteEntity owner;
+        end
+    }
 
-        public abstract string Name { get; set; }
+    /// <summary>
+    /// 行为状态信息结构体
+    /// </summary>
+    public struct StateBH
+    {
         /// <summary>
-        /// 所属实体
+        /// 行为名称
         /// </summary>
-        public virtual ExciteEntity OwnerExcite { get=> owner; set=> owner=value; }
+        public string name;
         /// <summary>
-        /// 所属实体(必须是ExciteEntity才能set)
+        /// 前段时可接受取消的行为
         /// </summary>
-        public virtual Entity Owner 
-        { 
-            get => owner;
-            set 
-            {
-                if(value is ExciteEntity)
-                {
-                    OwnerExcite = value as ExciteEntity;
-                }
-            } 
-        }
+        public string[] breakFront;
         /// <summary>
-        /// 获取行为id
+        /// 中段时可接受取消的行为
         /// </summary>
-        public virtual BHIDTable BHID { get => BHid; }
+        public string[] breakRunning;
+        /// <summary>
+        /// 后段时可接受取消的行为
+        /// </summary>
+        public string[] breakEnd;
+        /// <summary>
+        /// 当前行为的状态
+        /// </summary>
+        public State status;
+    }
+
+    /// <summary>
+    /// 行为模块抽象基类
+    /// </summary>
+    public abstract class BHBase : DynamicAttribute
+    {
+        #region 启动要求
+        /// <summary>
+        /// 前置行为状态要求
+        /// </summary>
+        public abstract string[] StartFront { get; }
+        /// <summary>
+        /// 前置空间状态要求
+        /// </summary>
+        public abstract string[] StartSpace { get; }
         #endregion
 
-        #region 功能
+        #region 字段|属性
+        protected new string attributeName = "行为";//属性名称
+        protected State status;//当前状态机状态
+        protected new ExciteEntity owner;
+        #region 前段
         /// <summary>
-        /// 添加开始事件
+        /// 前段最长持续时间
         /// </summary>
-        /// <param name="action"></param>
-        public void AddStartAction(Action action)
+        protected float timeFront;
+        /// <summary>
+        /// 行为开始时调用（仅一次）
+        /// </summary>
+        protected Action startAction;
+        /// <summary>
+        /// 处于前段过程允许被以下行为打断
+        /// </summary>
+        protected abstract string[] BreakFront { get; }
+        /// <summary>
+        /// 前段计时器
+        /// </summary>
+        protected float timerF;
+        public void AddStartAction(Action action) { startAction += action; }
+        public void ClearStartAction() { startAction = null; }
+        
+        #endregion
+        #region 中段
+        /// <summary>
+        ///中段最长持续时间(<0表示永久)
+        /// </summary>
+        protected float timeRunning;
+        /// <summary>
+        /// 行为中段时调用（持续调用）
+        /// </summary>
+        protected Action runningAction;
+        /// <summary>
+        /// 处于中段过程允许被以下行为打断
+        /// </summary>
+        protected abstract string[] BreakRunning { get; }
+        /// <summary>
+        /// 中段计时器
+        /// </summary>
+        protected float timerR;
+        public void AddRunningAction(Action action) { runningAction += action; }
+        public void ClearRunningAction() { runningAction = null; }
+        #endregion
+        #region 后段
+        /// <summary>
+        /// 后段最长持续时间
+        /// </summary>
+        protected float timeEnd;
+        /// <summary>
+        /// 行为中段时调用(仅一次)
+        /// </summary>
+        protected Action endAction;
+        /// <summary>
+        /// 处于中段过程允许被以下行为打断
+        /// </summary>
+        protected abstract string[] BreakEnd { get; }
+        /// <summary>
+        /// 后端计时器
+        /// </summary>
+        protected float timerE;
+        public void AddEndAction(Action action) { endAction += action; }
+        public void ClearEndAction() { endAction = null; }
+        #endregion
+        #endregion
+
+        #region 属性
+        /// <summary>
+        /// 当前属性状态
+        /// </summary>
+        public State Status
         {
-            StartAction += action;
+            get => status;
+            set
+            {
+                status = value;
+                switch(status)
+                {
+                    case State.start:
+                        timerF = timeFront;
+                        break;
+                    case State.running:
+                        timerR= timeRunning;
+                        break;
+                    case State.end:
+                        timerE= timeEnd;
+                        break;
+                    case State.wait:
+                        StopBH();
+                        break;
+                }
+            }
+        }
+        public override Entity Owner { get => owner; set => owner = value as ExciteEntity; }
+        public override string Name { get => attributeName; set { } }
+        /// <summary>
+        /// 获取当前行为信息
+        /// </summary>
+        public StateBH Info
+        {
+            get
+            {
+                return new StateBH
+                {
+                    name = attributeName,
+                    breakFront = BreakFront,
+                    breakRunning = BreakRunning,
+                    breakEnd = BreakEnd,    
+                };
+            }
+        }
+        #endregion
+
+        #region 功能函数
+        public override object GetStatus()
+        {
+            return Info;
         }
         /// <summary>
-        /// 清空开始事件
+        /// 开始此行为
         /// </summary>
-        public void ClearStartAction()
+        public void StartBH()
         {
-            StartAction = null;
-        }
-        /// <summary>
-        /// 添加结束事件
-        /// </summary>
-        /// <param name="action"></param>
-        public void AddEndAction(Action action)
-        {
-            EndAction += action;
-        }
-        /// <summary>
-        /// 清空结束事件
-        /// </summary>
-        public void ClearEndAction()
-        {
-            EndAction = null;
-        }
-        /// <summary>
-        /// 获取此行为的状态信息
-        /// </summary>
-        /// <returns></returns>
-        public static StateBH StatusInfo()
-        {
-            return new StateBH(BHid,enterLevel,runninglevel);
-        }
-        public virtual void Destroy()
-        {
-            enabled= false;
-            Destroy(this);
-        }
-        public abstract object GetStatus();
-        public virtual bool StartBehaviour()
-        {
+            Debug.Log("行为开始");
+            if (startAction != null)
+            {
+                startAction();
+            }
+            Status = State.start;
             enabled = true;
-            return true;
         }
-        public virtual bool StopBehaviour()
+        /// <summary>
+        /// 结束此行为
+        /// </summary>
+        public void StopBH()
         {
+            if (endAction != null)
+            {
+                endAction();
+            }
+            Status = State.wait;
             enabled = false;
-            return true;
         }
+        #endregion
+
+        #region 内部函数
+        /// <summary>
+        /// 前段行为
+        /// </summary>
+        protected abstract void StartContent();
+        /// <summary>
+        /// 中段行为
+        /// </summary>
+        protected abstract void LoopContent();
+        /// <summary>
+        /// 后段行为
+        /// </summary>
+        protected abstract void StopContent();
         #endregion
 
         #region Unity
-        protected virtual void OnEnable() 
-        {
-            if(StartAction != null)
-            {
-                StartAction();
-            }
-        }
-        protected virtual void OnDisable()
-        {
-            if (EndAction != null)
-            {
-                EndAction();
-            }
-        }
         protected virtual void Update()
         {
-            
+            /*Debug.Log($" {Name} 行为 阶段：{status}  " +
+                $" timer: {timerF} , {timerR} , {timerE}");*/
+            switch(status)
+            {
+                case State.start:
+                    StartContent();
+                    if(timerF <= 0)
+                    {
+                        Debug.Log("前段");
+                        Status = State.running;
+                    }
+                    break;
+                case State.running:
+                    LoopContent();
+                    if (timeRunning < 0 || timerR <= 0)
+                    {
+                        Debug.Log("中段");
+                        Status = State.end;
+                    }
+                    break;
+                case State.end:
+                    StopContent();
+                    if(timerE <= 0)
+                    {
+                        Debug.Log("后段");
+                        Status = State.wait;
+                    }
+                    break;
+            }
         }
         #endregion
     }

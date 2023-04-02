@@ -5,31 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 
 namespace Mod_Player
 {
-    public class BHMoveLandPlayer : BHBase
+    public class BHMovePlayer : BHBase
     {
 
-        #region 静态属性
-        /// <summary>
-        /// 行为id
-        /// </summary>
-        public new readonly static BHIDTable BHid = BHIDTable.RunningPlayer;
-        /// <summary>
-        /// 进入等级
-        /// </summary>
-        public new readonly static int enterLevel = 1;
-        /// <summary>
-        /// 持续等级
-        /// </summary>
-        public new readonly static int runninglevel = 1;
-        #endregion
-
         #region 组件
-
-        private Rigidbody2D rigidBody;
+        public Rigidbody2D rigidBody;
         /// <summary>
         /// 左判定器
         /// </summary>
@@ -41,27 +26,27 @@ namespace Mod_Player
         #endregion
 
         #region 属性
-        private string attributeName = "玩家地面移动状态";
-        private ExciteEntity player;//玩家实体
+        private new readonly string attributeName = "玩家移动";
         private Direction direction;//运动方向
         public bool touchleft = false;//左侧是否接触
         public bool touchright = false;//右侧是否接触
         public float speed;//移动速度
         public float maxSpeed;//最大移动速度
+
+        private static string[] breakFront = new string[]
+        {
+
+        };
+        private static string[] breakRunning = new string[]
+        {
+        };
+        private static string[] breakEnd = new string[]
+        {
+
+        };
         #endregion
 
         #region 公开属性
-        public override string Name { get => attributeName; set => attributeName = value; }
-        public override BHIDTable BHID { get => BHid; }
-        public override ExciteEntity OwnerExcite
-        {
-            get => owner;
-            set
-            {
-                owner = value;
-                rigidBody = owner.GetComponent<Rigidbody2D>();
-            }
-        }
         /// <summary>
         /// 运动方向
         /// </summary>
@@ -74,22 +59,17 @@ namespace Mod_Player
         /// 最大移动速度
         /// </summary>
         public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
-        #endregion
 
-        #region 功能函数
-        public static new StateBH StatusInfo()
-        {
-            return new StateBH(BHid, enterLevel, runninglevel);
-        }
-        public void TouchLandAction()//接触地面时触发的事件
-        {
-            player.ChangeState(BHIDTable.NormalPlayer);
-        }
-        public override object GetStatus()
-        {
-            return null;
-        }
+        public override string[] StartFront { get => null; }
 
+        public override string[] StartSpace { get => null; }
+
+        protected override string[] BreakFront { get => breakFront; }
+
+        protected override string[] BreakRunning { get => breakRunning; }
+
+        protected override string[] BreakEnd { get => breakEnd; }
+        public override string Name { get => attributeName; }
         #endregion
 
         #region 内部函数
@@ -113,6 +93,18 @@ namespace Mod_Player
                     }
                     break;
             }
+        }
+        protected override void StartContent()
+        {
+        }
+
+        protected override void LoopContent()
+        {
+            Running();
+        }
+
+        protected override void StopContent()
+        {
         }
         #endregion
 
@@ -150,18 +142,9 @@ namespace Mod_Player
                 rightToucher.AddTouchAction(TouchRight);
                 rightToucher.AddUntouchAction(LeaveRight);
             }
-        }
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-        }
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-        }
-        protected override void Update()
-        {
-            Running();
+            timeFront = 0;
+            timeRunning = -1;
+            timeEnd = 0;
         }
         #endregion
     }

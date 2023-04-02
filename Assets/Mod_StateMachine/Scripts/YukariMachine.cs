@@ -15,7 +15,7 @@ namespace Mod_StateMachine
 
     }
 
-    public class YukariMachine : MonoBehaviour, IStateMachine
+    public class YukariMachine : MonoBehaviour
     {
         #region 属性
         private Entity owner;

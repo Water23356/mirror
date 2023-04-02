@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Common;
-using Mod_Behaviour;
 using Mod_Entity;
 using UnityEngine;
 
@@ -50,8 +49,6 @@ namespace Mod_Player
         public string Name { get => attributeName; set => attributeName=value; }
         public Entity Owner { get => player; set => player = value; }
         #endregion
-
-        
 
         #region 抽象实现
         public sealed override void initialization()
