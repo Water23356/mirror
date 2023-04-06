@@ -1,8 +1,18 @@
-﻿using System.Collections;
+﻿using Mod_Attribute;
 using System.Collections.Generic;
 using UnityEngine;
 namespace Mod_Entity
 {
+    /// <summary>
+    /// 伤害体触发事件委托
+    /// </summary>
+    /// <param name="">伤害事件信息</param>
+    public delegate void DelDamage(DamageEventInfo info);
+    /// <summary>
+    /// 加载完毕属性时触发事件
+    /// </summary>
+    public delegate void DelLoadAttributes();
+
     /// <summary>
     /// 实体管理类：
     /// 用于对实体所拥有的属性脚本进行管理，该实体下的属性脚本可通过此对象间接 获取 其他属性脚本；
@@ -10,9 +20,37 @@ namespace Mod_Entity
     /// </summary>
     public class Entity : MonoBehaviour
     {
+        #region 组件
+        /// <summary>
+        /// 自身刚体组件
+        /// </summary>
+        public Rigidbody2D SelfRigidbody;
+        #endregion
+
         #region 字段
+
         private string damageTag = "Test";
         private List<IAttribute> attributes= new List<IAttribute>();
+        /// <summary>
+        /// 此实体受到伤害判定时调用的事件
+        /// </summary>
+        public event DelDamage DamangeEvent;
+        /// <summary>
+        /// 加载完毕属性时触发事件
+        /// </summary>
+        public event DelLoadAttributes LoadAttributesEvent;
+        /// <summary>
+        /// 是否接受控制
+        /// </summary>
+        public bool controlabel = true;
+        /// <summary>
+        /// 击退箱
+        /// </summary>
+        public ATRepelBox repelBox;
+        /// <summary>
+        /// 是否接受击退
+        /// </summary>
+        public bool repelable;
         #endregion
 
         #region 属性
@@ -32,6 +70,7 @@ namespace Mod_Entity
         public virtual void AddAttribute(IAttribute attribute)
         {
             if (attribute == null) return;
+            Debug.Log("添加属性成功");
             attributes.Add(attribute);
             attribute.Owner = this;
         }
@@ -87,22 +126,42 @@ namespace Mod_Entity
                 attribute.Destroy();
             }
         }
+        /// <summary>
+        /// 受到伤害体判定时自动调用
+        /// </summary>
+        /// <param name="eventInfo">伤害事件信息</param>
+        public virtual void GetDamage(DamageEventInfo eventInfo)
+        {
+            if(SelfRigidbody!= null)
+            {
+                SelfRigidbody.velocity = eventInfo.repel;
+            }
+            DamangeEvent(eventInfo);
+        }
         #endregion
 
         #region Unity
-        protected void Start()
+        protected virtual void Awake()
         {
-            IAttribute[] attributes = GetComponents<IAttribute>();
-            foreach(IAttribute attribute in attributes)
+            repelBox = new ATRepelBox(this);
+        }
+        protected virtual void Start()
+        {
+            IAttribute[] ats = GetComponents<IAttribute>();
+
+            //Debug.Log("组件数量："+ats.Length);
+            foreach (IAttribute attribute in ats)
             {
                 AddAttribute(attribute);
-                attribute.Owner = this;
             }
+            if (LoadAttributesEvent != null) { LoadAttributesEvent(); }
+            //Debug.Log("实体初始化！！");
         }
         void Update()
         {
 
         }
+
         #endregion
     }
 }

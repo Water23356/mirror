@@ -60,6 +60,7 @@ namespace Mod_Player
         /// </summary>
         public sealed override void InputMonitor()
         {
+            
             inputInfo.Horizontal = Input.GetAxis("Horizontal");//水平轴
             inputInfo.Vertical = Input.GetAxis("Vertical");//垂直轴
             inputInfo.jump = Input.GetButtonDown("Jump");//跳跃
@@ -68,6 +69,7 @@ namespace Mod_Player
             inputInfo.skill = Input.GetButtonDown("Skill");//技能
             inputInfo.change = Input.GetButtonDown("Change");//切换
             inputInfo.time = Time.time;//指令时间
+            Debug.Log($"输入监听： 跳跃：{inputInfo.jump}");
         }
         public sealed override void UpdateFunction()
         {
@@ -83,6 +85,11 @@ namespace Mod_Player
         public void Destroy()
         {
             Destroy(this);
+        }
+
+        public void Initialization()
+        {
+            
         }
         #endregion
     }

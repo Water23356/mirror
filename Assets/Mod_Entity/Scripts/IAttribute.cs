@@ -17,10 +17,14 @@
         /// 获取当前属性状态
         /// </summary>
         /// <returns></returns>
-        public abstract object GetStatus();
+        public object GetStatus();
         /// <summary>
         /// 当从实体移除此组件时调用
         /// </summary>
-        public abstract void Destroy();
+        public void Destroy();
+        /// <summary>
+        /// 初始化内容
+        /// </summary>
+        public void Initialization();
     }
 }

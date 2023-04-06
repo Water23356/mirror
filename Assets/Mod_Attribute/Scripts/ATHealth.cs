@@ -8,6 +8,18 @@ using Unity.VisualScripting;
 namespace Mod_Attribute
 {
     /// <summary>
+    /// 生命响应事件
+    /// </summary>
+    /// <param name="info">生命事件信息</param>
+    public delegate void HealthActionEvent(HealthEventInfo info);
+    /// <summary>
+    /// 生命判定事件
+    /// </summary>
+    /// <param name="info">生命事件信息</param>
+    /// <returns>判定结果</returns>
+    public delegate bool HealthJudgeEvent(HealthEventInfo info);
+
+    /// <summary>
     /// 生命属性结构体
     /// </summary>
     public struct HealthValue
@@ -45,13 +57,11 @@ namespace Mod_Attribute
     /// <summary>
     /// 生命属性
     /// </summary>
-    public class ATHealth : MonoBehaviour, IAttribute
+    public class ATHealth : DynamicAttribute
     {
         #region 属性
-        private string attributeName = "Health";
         public float health = 100;
         public float healthMax = 100;
-        private Entity owner;
         public bool negative = false;
         public bool overflow = false;
         #endregion
@@ -73,8 +83,6 @@ namespace Mod_Attribute
         /// 生命值是否可超过上限
         /// </summary>
         public bool Overflow { get => overflow; set => overflow = value; }
-        public string Name { get => attributeName; set => attributeName = value; }
-        public Entity Owner { get => owner; set => owner = value; }
 
         #endregion
 
@@ -82,26 +90,34 @@ namespace Mod_Attribute
         /// <summary>
         /// 在触发 生命值改变 事件，值改变前触发的事件（事件信息，当前操作是否生效）
         /// </summary>
-        public Func<HealthEventInfo, bool> HealthChangeBefAction;
+        public event HealthJudgeEvent HealthChangeBefEvent;
         /// <summary>
         /// 在触发 生命值上限改变 事件，值改变前触发的事件（事件信息，当前操作是否生效）
         /// </summary>
-        public Func<HealthEventInfo, bool> HealthMaxChangeBefAction;
+        public event HealthJudgeEvent HealthMaxChangeBefEvent;
         /// <summary>
         /// 生命值变化后触发的事件(事件信息)
         /// </summary>
-        public Action<HealthEventInfo> HealthChangeAction;
+        public event HealthActionEvent HealthChangeEvent;
         /// <summary>
         /// 生命上限变化后触发的事件(事件信息)
         /// </summary>
-        public Action<HealthEventInfo> HealthMaxChangeAction;
+        public event HealthActionEvent HealthMaxChangeEvent;
         /// <summary>
         /// 生命值归零后触发的事件
         /// </summary>
-        public Action DeadAction;
+        public event HealthActionEvent DeadEvent;
         #endregion
 
         #region 功能函数
+        /// <summary>
+        /// 受到伤害
+        /// </summary>
+        /// <param name="info">伤害信息</param>
+        public void GetDamage(DamageEventInfo info)
+        {
+
+        }
         /// <summary>
         /// 设置当前生命值
         /// </summary>
@@ -112,9 +128,9 @@ namespace Mod_Attribute
         {
             bool next = true;
             float change = value - health;
-            if (HealthChangeBefAction != null)
+            if (HealthChangeBefEvent != null)
             {
-                next = HealthChangeBefAction(new HealthEventInfo
+                next = HealthChangeBefEvent(new HealthEventInfo
                 {
                     health = health,
                     healthMax = healthMax,
@@ -137,9 +153,20 @@ namespace Mod_Attribute
                 }
                 #endregion
 
-                if (HealthChangeAction != null)
+                if (HealthChangeEvent != null)
                 {
-                    HealthChangeAction(new HealthEventInfo
+                    HealthChangeEvent(new HealthEventInfo
+                    {
+                        health = health,
+                        healthMax = healthMax,
+                        healthChange = change,
+                        pruner = pruner
+                    });
+                }
+
+                if(health < 0 && DeadEvent !=null)
+                {
+                    DeadEvent(new HealthEventInfo
                     {
                         health = health,
                         healthMax = healthMax,
@@ -160,9 +187,9 @@ namespace Mod_Attribute
         {
             bool next = true;
             float change = value - healthMax;
-            if (HealthMaxChangeBefAction != null)
+            if (HealthMaxChangeBefEvent != null)
             {
-                next = HealthMaxChangeBefAction(new HealthEventInfo
+                next = HealthMaxChangeBefEvent(new HealthEventInfo
                 {
                     health = health,
                     healthMax = healthMax,
@@ -185,9 +212,9 @@ namespace Mod_Attribute
                 }
                 #endregion
 
-                if (HealthMaxChangeAction != null)
+                if (HealthMaxChangeEvent != null)
                 {
-                    HealthMaxChangeAction(new HealthEventInfo
+                    HealthMaxChangeEvent(new HealthEventInfo
                     {
                         health = health,
                         healthMax = healthMax,
@@ -195,6 +222,7 @@ namespace Mod_Attribute
                         pruner = pruner
                     });
                 }
+
             }
             return next;
         }
@@ -208,9 +236,9 @@ namespace Mod_Attribute
         {
             bool next = true;
             Debug.Log("生命发生改变！");
-            if (HealthChangeBefAction != null)
+            if (HealthChangeBefEvent != null)
             {
-                next = HealthChangeBefAction(new HealthEventInfo
+                next = HealthChangeBefEvent(new HealthEventInfo
                 {
                     health = health,
                     healthMax = healthMax,
@@ -233,9 +261,19 @@ namespace Mod_Attribute
                 }
                 #endregion
 
-                if (HealthChangeAction != null)
+                if (HealthChangeEvent != null)
                 {
-                    HealthChangeAction(new HealthEventInfo
+                    HealthChangeEvent(new HealthEventInfo
+                    {
+                        health = health,
+                        healthMax = healthMax,
+                        healthChange = value,
+                        pruner = pruner
+                    });
+                }
+                if (health < 0 && DeadEvent != null)
+                {
+                    DeadEvent(new HealthEventInfo
                     {
                         health = health,
                         healthMax = healthMax,
@@ -255,9 +293,9 @@ namespace Mod_Attribute
         public bool CHangeHealthMax(float value, object pruner)
         {
             bool next = true;
-            if (HealthMaxChangeBefAction != null)
+            if (HealthMaxChangeBefEvent != null)
             {
-                next = HealthMaxChangeBefAction(new HealthEventInfo
+                next = HealthMaxChangeBefEvent(new HealthEventInfo
                 {
                     health = health,
                     healthMax = healthMax,
@@ -280,9 +318,9 @@ namespace Mod_Attribute
                 }
                 #endregion
 
-                if (HealthMaxChangeAction != null)
+                if (HealthMaxChangeEvent != null)
                 {
-                    HealthMaxChangeAction(new HealthEventInfo
+                    HealthMaxChangeEvent(new HealthEventInfo
                     {
                         health = health,
                         healthMax = healthMax,
@@ -293,18 +331,22 @@ namespace Mod_Attribute
             }
             return next;
         }
-        public object GetStatus()
+        public override object GetStatus()
         {
             return new HealthValue { health = health,healthMax=healthMax};
-        }
-        public void Destroy()
-        {
-            Destroy(this);
         }
         #endregion
 
         #region 内部函数
+        private void Start()
+        {
+            attributeName = "Health";
+        }
 
+        public override void Initialization()
+        {
+            owner.DamangeEvent += GetDamage;
+        }
         #endregion
     }
 }

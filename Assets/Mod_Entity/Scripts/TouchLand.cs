@@ -7,6 +7,11 @@ using UnityEngine;
 namespace Mod_Entity
 {
     /// <summary>
+    /// 预测接触事件
+    /// </summary>
+    public delegate void TouchLandEvent();
+
+    /// <summary>
     /// 虚拟碰撞预测
     /// </summary>
     public class TouchLand : MonoBehaviour
@@ -15,15 +20,15 @@ namespace Mod_Entity
         /// <summary>
         /// 接触事件委托
         /// </summary>
-        private Action TouchAction;
+        public event TouchLandEvent TouchEvent;
         /// <summary>
         /// 未接触 事件委托
         /// </summary>
-        private Action UntouchAction;
+        public event TouchLandEvent UntouchLandEvent;
         #endregion
 
         #region 属性
-        private bool runing = true;
+        public bool runing = true;
         private List<string> touchTags = new List<string>();//检测标签
         private List<object> lands = new List<object>();
         /// <summary>
@@ -36,45 +41,10 @@ namespace Mod_Entity
         }
         #endregion
 
-        #region 功能函数
-
-        public void AddTouchAction(Action action)
-        {
-            TouchAction += action;
-        }
-        public void ClearTouchAction() 
-        {
-            TouchAction = null;
-        }
-        public void AddUntouchAction(Action action)
-        {
-            UntouchAction += action; 
-        }
-        public void ClearUntouchAction()
-        {
-            UntouchAction = null;
-        }
-
-        /// <summary>
-        /// 启用着地检测
-        /// </summary>
-        public void Usecheck()
-        {
-            runing = true;
-        }
-        /// <summary>
-        /// 关闭着地检测
-        /// </summary>
-        public void Unusecheck()
-        {
-            runing = false;
-        }
-        #endregion
-
         #region 触发监听
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (runing && TouchAction != null)
+            if (runing)
             {
                 if (touchTags.Contains(collision.tag))//检测物体为障碍物
                 {
@@ -82,13 +52,13 @@ namespace Mod_Entity
                     {
                         lands.Add(collision.gameObject);
                     }
-                    TouchAction();
+                    if (TouchEvent != null) { TouchEvent(); }
                 }
             }
         }
         private void OnTriggerExit2D(Collider2D collision)
         {
-            if (runing && UntouchAction != null)
+            if (runing)
             {
                 if (touchTags.Contains(collision.tag))//检测物体为障碍物
                 {
@@ -102,7 +72,7 @@ namespace Mod_Entity
 
         private void OnTriggerStay2D(Collider2D collision)
         {
-            if (runing && TouchAction != null)
+            if (runing)
             {
                 if (touchTags.Contains(collision.tag))//检测物体为障碍物
                 {
@@ -110,7 +80,7 @@ namespace Mod_Entity
                     {
                         lands.Add(collision.gameObject);
                     }
-                    TouchAction();
+                    if (TouchEvent != null) { TouchEvent(); }
                 }
             }
         }
@@ -125,7 +95,7 @@ namespace Mod_Entity
         {
             if (lands.Count == 0)
             {
-                UntouchAction();
+                if (UntouchLandEvent != null) { UntouchLandEvent(); }
             }
         }
         #endregion

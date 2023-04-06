@@ -4,15 +4,60 @@ using UnityEngine;
 using Tools;
 using Mod_Attribute;
 using Unity.Burst.Intrinsics;
+using System.Linq;
 
 namespace Mod_Entity
 {
-   
+    /// <summary>
+    /// 伤害事件信息
+    /// </summary>
+    public struct DamageEventInfo
+    {
+        /// <summary>
+        /// 伤害值
+        /// </summary>
+        public float damage;
+        /// <summary>
+        /// 伤害源对象
+        /// </summary>
+        public object hiter;
+        /// <summary>
+        /// 击退效果向量
+        /// </summary>
+        public Vector2 repel;
+    }
+    
     /// <summary>
     /// 伤害体脚本
     /// </summary>
     public class DamageEntity : MonoBehaviour
     {
+        /// <summary>
+        /// 击退模式
+        /// </summary>
+        public enum RepelMode
+        {
+            /// <summary>
+            /// 无击退的
+            /// </summary>
+            Off,
+            /// <summary>
+            /// 自动的（根据伤害体位置与被判定实体的位置自动确定方向）
+            /// </summary>
+            Auto,
+            /// <summary>
+            /// 自定义
+            /// </summary>
+            Custom,
+            /// <summary>
+            /// 锁定X轴的（击退方向限制在X轴）
+            /// </summary>
+            LimX,
+            /// <summary>
+            /// 锁定Y轴的（击退方向限制在Y轴）
+            /// </summary>
+            LimY,
+        }
         /// <summary>
         /// 对象计时器
         /// </summary>
@@ -40,26 +85,38 @@ namespace Mod_Entity
         #endregion
 
         #region 属性
+        /// <summary>
+        /// 关联此伤害体的对象（伤害源对象）
+        /// </summary>
         private object owner;
         private Dictionary<Entity, Timer> timers = new Dictionary<Entity, Timer>();//计时器
         private List<string> damageTag = new List<string>();//伤害标签
         private List<Entity> inDamageItems = new List<Entity>();//处于伤害范围内的实体对象
 
-        public float damage;//伤害值
-        public int damageTimes = 1;//对同一对象的最大允许伤害次数
-        public float cd = 0.05f;//多段伤害触发间隔
-        public float power = 0;//击退力量
+        private float damage;//伤害值
+        private int damageTimes = 1;//对同一对象的最大允许伤害次数
+        private float cd = 0.05f;//多段伤害触发间隔
+        private float repPower = 0;//击退参考效果
+        private RepelMode repMode = RepelMode.Auto;//击退方向
+        private Vector2 customDir;//自定义击退方向
 
-        public bool effective = true;//伤害判定是否有效
-        public bool autoDead = false;//自动死亡
-        public bool hitsLimit = false;//是否限定造成伤害的总次数
-        public int hits = 0;//当前伤害判定生效次数
-        public int maxHits = 1;//最大伤害生效次数
-        public float maxLiveTime = 1;//存活时间
+        private bool effective = true;//伤害判定是否有效
+        private bool autoDead = false;//自动死亡
+        private bool hitsLimit = false;//是否限定造成伤害的总次数
+        private int hits = 0;//当前伤害判定生效次数
+        private int maxHits = 1;//最大伤害生效次数
+        private float maxLiveTime = 1;//存活时间
 
         #endregion
 
         #region 公开属性
+        /// <summary>
+        /// 自定义击退方向
+        /// </summary>
+        public Vector2 CustomDir
+        {
+            get => customDir;set => customDir = value;
+        }
         /// <summary>
         /// 伤害体所属者
         /// </summary>
@@ -91,9 +148,16 @@ namespace Mod_Entity
         /// <summary>
         /// 击退力度
         /// </summary>
-        public float Power
+        public float RepPower
         {
-            get => power; set => power = value;
+            get => repPower; set => repPower = value;
+        }
+        /// <summary>
+        /// 击退方向模式
+        /// </summary>
+        public RepelMode RepMode
+        {
+            get => repMode; set => repMode = value;
         }
         /// <summary>
         /// 判定是否启用
@@ -127,6 +191,30 @@ namespace Mod_Entity
         #endregion
 
         #region 公开函数
+        /// <summary>
+        /// 获取此伤害体对指定实体的模拟击退向量
+        /// </summary>
+        /// <param name="aim">目标实体</param>
+        /// <returns></returns>
+        public Vector2 GetDamageDirction(Entity aim)
+        {
+            switch(repMode)
+            {
+                case RepelMode.Off:
+                    return Vector2.zero;
+                case RepelMode.Auto:
+                    return (aim.transform.position - transform.position).normalized * repPower;
+                case RepelMode.Custom:
+                    return CustomDir * repPower;
+                case RepelMode.LimX:
+                    if (aim.transform.position.x < transform.position.x) { return Vector2.left * repPower; }
+                    return Vector2.right * repPower;
+                case RepelMode.LimY:
+                    if (aim.transform.position.y < transform.position.y) { return Vector2.up * repPower; }
+                    return Vector2.down * repPower;
+            }
+            return Vector2.zero;
+        }
         /// <summary>
         /// 添加伤害标签
         /// </summary>
@@ -169,6 +257,12 @@ namespace Mod_Entity
                     if (Damagable(aim))//判断伤害cd是否冷却
                     {
                         Debug.Log("造成伤害");
+                        aim.GetDamage(new DamageEventInfo
+                        {
+                            damage = damage,
+                            repel = GetDamageDirction(aim),
+                            hiter = owner
+                        });
                         ATHealth health = aim.GetAttribute<ATHealth>();
                         health.ChangeHealth(damage, Owner);
                         RestartCD(aim);//重置计时器
@@ -211,11 +305,7 @@ namespace Mod_Entity
         /// <returns></returns>
         private bool isInside(Entity aim)
         {
-            foreach (Entity obj in timers.Keys)
-            {
-                if (obj == aim) { return true; }
-            }
-            return false;
+            return timers.Keys.Contains(aim);
         }
         /// <summary>
         /// 判断指定判定对象 是否可进行伤害判定（主要判定cd是否冷却，是否达到最大伤害次数）

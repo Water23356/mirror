@@ -4,12 +4,20 @@ using Mod_Entity.Mod_SMSpace;
 
 namespace Mod_Player
 {
+    /// <summary>
+    /// 玩家实体
+    /// </summary>
     public class PlayerEntity:ExciteEntity
     {
+
+        #region 组件
+        public TouchLand leftTouch;
+        public TouchLand upTouch;
+        public TouchLand downTouch;
+        public TouchLand rightTouch;
+        #endregion
+
         #region 公开属性
-        public BHNormalPlayer normalPlayer;
-        public BHMovePlayer movePlayer;
-        public BHJumpPlayer jumpPlayer;
         public SMAirSpace airSpace;
         public SMLandSpace landSpace;
         public InputInterpreter inputInterpreter;
@@ -17,16 +25,22 @@ namespace Mod_Player
 
 
         #region Unity
-        private void Awake()
+        protected override void Awake()
         {
-            AddAttribute(normalPlayer);
-            AddAttribute(movePlayer);
-            AddAttribute(jumpPlayer);
+            base.Awake();
             AddAttribute(airSpace);
-            AddAttribute(landSpace);
-            defSp = spaces["地面空间状态"];
-            defBh = bhs["玩家通常"];
 
+            AddAttribute(landSpace);
+            BHMove move = new BHMove(this);
+            BHJump jump = new BHJump(this);
+            AddAttribute(new BHNormal(this));
+            AddAttribute(new BHAttack(this));
+            AddAttribute(move);
+            AddAttribute(jump);
+            move.LeftToucher = leftTouch;
+            move.RightToucher = rightTouch;
+            jump.UpToucher = upTouch;
+            defBh = bhs["通常"];
             inputInterpreter.enabled = true;
         }
         #endregion

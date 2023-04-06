@@ -28,6 +28,8 @@ namespace Mod_Entity
         {
             return null;
         }
+
+        public abstract void Initialization();
         #endregion
     }
 }

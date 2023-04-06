@@ -43,37 +43,31 @@ namespace Mod_Player
         /// <param name="input"></param>
         private void Parse(PlayerInputInfo input)
         {
+            Debug.Log("解释轴："+(input.Horizontal!=0));
+            Debug.Log("解释跳跃:"+input.jump);
             if (input.jump)//跳跃
             {
-                player.ChangeStateBH("玩家跳跃");
+                player.ChangeStateBH("跳跃");
                 return;
             }
             if (input.Horizontal != 0)//移动
             {
-                BHMovePlayer BHmove = player.BHs["玩家移动"] as BHMovePlayer;
-                BHmove.speed = Mathf.Abs(input.Horizontal) * BHmove.MaxSpeed;
-                if (input.Horizontal < 0) { BHmove.Direction = Direction.left; }
-                else { BHmove.Direction = Direction.right; }
-                player.ChangeStateBH("玩家移动");
+                BHMove BHmove = player.BHs["移动"] as BHMove;
+                BHmove.speed = Mathf.Abs(input.Horizontal) * BHmove.maxSpeed;
+                if (input.Horizontal < 0) { BHmove.direction = Direction.left; }
+                else { BHmove.direction = Direction.right; }
+                player.ChangeStateBH("移动");
             }
             else//移动停止
             {
-                BHMovePlayer BHmove = player.BHs["玩家移动"] as BHMovePlayer;
-                BHmove.StopBH();
+                Debug.Log("移动停止");
+                BHMove BHmove = player.BHs["移动"] as BHMove;
+                BHmove.active = false;
             }
-            /*
-            if (player.NowSpaceStatus.Name == "地面空间状态")
-            {
-                
-            }
-            else if(player.NowSpaceStatus.Name == "空中空间状态")
-            {
-
-            }*/
         }
         #endregion
 
-        private void FixedUpdate()//每个时间刻对指令进行解析(结合输入指令和当前玩家状态)
+        private void Update()//每帧对指令进行解析(结合输入指令和当前玩家状态)
         {
             while(inputs.Count > 0)
             {

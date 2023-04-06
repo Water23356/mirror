@@ -81,6 +81,10 @@ namespace Common
                     {
                         obj.PowerOff();
                         stk.Pop();
+                        if(stk.TryPeek(out last))
+                        {
+                            last.PowerOn();
+                        }
                         del = true;
                     }
                 }

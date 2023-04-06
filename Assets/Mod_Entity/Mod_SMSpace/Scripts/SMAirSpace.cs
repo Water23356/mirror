@@ -12,42 +12,58 @@ namespace Mod_Entity.Mod_SMSpace
     public class SMAirSpace : SMSpace
     {
         #region 属性
-        protected new readonly string attributeName = "空中空间状态";//属性名称
-        public override string Name { get => attributeName;}
         /// <summary>
         /// 接触器
         /// </summary>
         public TouchLand touchLand;
-        private bool touch = false;//是否接触地面
-        #endregion
-
-        #region 功能函数
-        public override void Enter()
+        public override bool SpaceConform
         {
-            base.Enter();
-            touch = false;
+            get => spaceConform;
+            protected set
+            {
+                spaceConform = value;
+                if (spaceConform)
+                {
+                    Enter();
+                }
+                else
+                {
+                    Exit();
+                }
+            }
         }
         #endregion
+
+        public SMAirSpace()
+        {
+            attributeName = "空中";
+        }
 
         #region 内部函数
         private void Touch()
         {
-            touch = true;
+            SpaceConform = false;
+        }
+        private void Leave()
+        {
+            SpaceConform = true;
         }
         #endregion
 
         protected override void EnvironCheck()
         {
-            if (touch)//接触地面
-            {
-                owner.ChangeStateSP("地面空间状态");
-            }
+            
         }
 
         #region Unity
         private void Awake()
         {
-            touchLand.AddTouchAction(Touch);
+            touchLand.TouchEvent+=Touch;
+            touchLand.UntouchLandEvent+=Leave;
+        }
+
+        public override void Initialization()
+        {
         }
         #endregion
     }
